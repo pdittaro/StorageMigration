@@ -23,7 +23,7 @@ usage () {
     $0 -n devex-von-image init
     $0 -n devex-von-image -r https://github.com/WadeBarnes/StorageMigration.git init
 
-    $0 -e tools migrate jenkins jenkins-data gluster-block 5Gi
+    $0 -e tools migrate jenkins jenkins-data gluster-block 5Gi RWO
 
   Options:
   ========
@@ -57,15 +57,16 @@ usage () {
         For example;
           $0 -e dev scaleUp django
 
-    migrate <hostPodName> <pvcName> <pvcType> <pvcSize>
+    migrate <hostPodName> <pvcName> <pvcType> <pvcSize> <pvcAccess>
       - Migrate files from one PVC to another of the same name.
         Good for migrating from one storage class to another, or to a new PVC of a different size.
 
       - Required parameters:
         - hostPodName: The friendly name of the host pod.  Typically, this is the same as the deployment configuration name.
-        - pvcName: The name of the PVC to be migrated.
-        - pvcType: The PVC class to use for the new PVC.  One of gluster-file, gluster-block, or gluster-file-db.
-        - pvcSize: The size, in Gi, for the new PVC, e.g. 1Gi, 2Gi, 5Gi
+        - pvcName:   The name of the PVC to be migrated.
+        - pvcType:   The PVC class to use for the new PVC.  One of gluster-file, gluster-block, or gluster-file-db.
+        - pvcSize:   The size, in Gi, for the new PVC, e.g. 1Gi, 2Gi, 5Gi
+        - pvcAccess: The access mode for the PVC, e.g RWO, RWX
 
     copy <sourcePvcName> <targetPvcName>
       - Copy files from one existing PVC to another exiting PVC.
@@ -173,16 +174,17 @@ migrate(){
     _tmpPvcName=${_pvcName}-tmp
     _pvcType=${4}
     _pvcSize=${5}
+    _pvcAccess=${6}
     _namespace=$(getProjectName)
 
-    printAndAskToContinue "Migration settings:\n  Project: ${_namespace}\n  Host: ${_hostName}\n  PVC to Migrate: ${_pvcName}\n  New PVC Type: ${_pvcType}\n  New PVC Size: ${_pvcSize}\n"
+    printAndAskToContinue "Migration settings:\n  Project: ${_namespace}\n  Host: ${_hostName}\n  PVC to Migrate: ${_pvcName}\n  New PVC Type: ${_pvcType}\n  New PVC Size: ${_pvcSize}\n New PVC Access Mode: ${_pvcAccess}"
 
     # Scale down the host pod
     scaleDown ${_hostName}
     printAndWait "Wait for the ${_hostName} pod to completely shut down before continuing."
 
     # Create the tmp PVC
-    createPVC "${_tmpPvcName}" "${_pvcType}" "${_pvcSize}" "${_hostName}"
+    createPVC "${_tmpPvcName}" "${_pvcType}" "${_pvcSize}" "${_pvcAccess}" "${_hostName}"
     printAndWait "Wait for the ${_tmpPvcName} PVC to be created before continuing."
 
     # Deploy the migrator pod
@@ -204,7 +206,7 @@ migrate(){
     printAndWait "Wait for the ${_pvcName} to be completely deleted before continuing."
 
     # Create the new PVC
-    createPVC "${_pvcName}" "${_pvcType}" "${_pvcSize}" "${_hostName}"
+    createPVC "${_pvcName}" "${_pvcType}" "${_pvcSize}" "${_pvcAccess}" "${_hostName}"
     printAndWait "Wait for the new ${_pvcName} PVC to be created before continuing."
 
     # Reconfigure/redeploy the migrator pod
@@ -325,7 +327,8 @@ createPVC(){
     _pvcName=${1}
     _pvcType=${2}
     _pvcSize=${3}
-    _appName=${4}
+    _pvcAccess=${4}
+    _appName=${5}
     _namespace=$(getProjectName)
 
     if [ -z "${_appName}" ] || [ -z "${_pvcName}" ] || [ -z "${_pvcType}" ] || [ -z "${_pvcSize}" ]; then
@@ -338,6 +341,7 @@ createPVC(){
                PERSISTENT_VOLUME_NAME=${_pvcName} \
                PERSISTENT_VOLUME_CLASS=${_pvcType} \
                PERSISTENT_VOLUME_SIZE=${_pvcSize} \
+               PERSISTENT_VOLUME_ACCESS_MODE=${_pvcAccess} \
                > pvc-deployment.json
 
     oc -n ${_namespace} create -f pvc-deployment.json

@@ -16,9 +16,7 @@
       },
       "spec": {
         "storageClassName": "${PERSISTENT_VOLUME_CLASS}",
-        "accessModes": [
-          "ReadWriteOnce"
-        ],
+        "accessModes": ["${PERSISTENT_VOLUME_ACCESS_MODE}"],
         "resources": {
           "requests": {
             "storage": "${PERSISTENT_VOLUME_SIZE}"
