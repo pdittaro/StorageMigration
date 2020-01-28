@@ -53,6 +53,13 @@
       "description": "The class of the volume; gluster-file, gluster-block, gluster-file-db.",
       "required": false,
       "value": "gluster-file"
+    },
+    {
+      "name": "PERSISTENT_VOLUME_ACCESS_MODE",
+      "displayName": "Persistent Volume Access mode",
+      "description": "The access mode class of the volume; RWO, RWX, ROX.",
+      "required": false,
+      "value": "RWX"
     }
   ]
 }

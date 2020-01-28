@@ -188,7 +188,7 @@ migrate(){
     printAndWait "Wait for the ${_tmpPvcName} PVC to be created before continuing."
 
     # Deploy the migrator pod
-    updateMigratorDeplymentParams "./templates/pvc-migrator-deploy.local.param" "${_pvcName}" "${_tmpPvcName}" "latest"
+    updateMigratorDeploymentParams "./templates/pvc-migrator-deploy.local.param" "${_pvcName}" "${_tmpPvcName}" "latest"
     deployMigrator ${_migratorPodName}
     scaleUp ${_migratorPodName}
     printAndWait "Wait for the ${_migratorPodName} pod to completely startup before continuing."
@@ -245,7 +245,7 @@ copy(){
     printAndWait "Make sure there are no running pods connected to the source and target PVCs."
 
     # Deploy the migrator pod
-    updateMigratorDeplymentParams "./templates/pvc-migrator-deploy.local.param" "${_sourcePvcName}" "${_targetPvcName}" "latest"
+    updateMigratorDeploymentParams "./templates/pvc-migrator-deploy.local.param" "${_sourcePvcName}" "${_targetPvcName}" "latest"
     deployMigrator ${_migratorPodName}
     scaleUp ${_migratorPodName}
     printAndWait "Wait for the ${_migratorPodName} pod to completely startup before continuing."
@@ -262,7 +262,7 @@ copy(){
   )
 }
 
-updateMigratorDeplymentParams() {
+updateMigratorDeploymentParams() {
   (
     _paramFile=${1:-./templates/pvc-migrator-deploy.local.param}
     _sourcePvc=${2}
@@ -317,7 +317,7 @@ deletePVC(){
       exit 1
     fi
 
-    printAndAskToContinue "If you contiune the ${_pvcName} PVC will be perminently deleted.  All data on the PVC will be lost."
+    printAndAskToContinue "If you continue the ${_pvcName} PVC will be perminently deleted.  All data on the PVC will be lost."
     oc -n ${_namespace} delete pvc ${_pvcName}
   }
 }
@@ -331,7 +331,7 @@ createPVC(){
     _appName=${5}
     _namespace=$(getProjectName)
 
-    if [ -z "${_appName}" ] || [ -z "${_pvcName}" ] || [ -z "${_pvcType}" ] || [ -z "${_pvcSize}" ]; then
+    if [ -z "${_appName}" ] || [ -z "${_pvcName}" ] || [ -z "${_pvcType}" ] || [ -z "${_pvcSize}" ] || [ -z "${_pvcAccess}" ] ; then
       echo -e \\n"createPVC; Missing parameter!"\\n
       exit 1
     fi
