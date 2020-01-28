@@ -466,16 +466,17 @@ case "${_cmd}" in
     pvcName=${2}
     pvcType=${3}
     pvcSize=${4}
-    migratorName=${5:-pvc-migrator}
+    pvcAccess=${5}
+    migratorName=${6:-pvc-migrator}
 
-    if [ -z "${hostPodName}" ] || [ -z "${pvcName}" ] || [ -z "${pvcType}" ] || [ -z "${pvcSize}" ]; then
+    if [ -z "${hostPodName}" ] || [ -z "${pvcName}" ] || [ -z "${pvcType}" ] || [ -z "${pvcSize}" ] || [ -z "${pvcAccess}" ]; then
       echoWarning "\n${_cmd}; Missing one or more required parameters."
       globalUsage
       exit 1
     fi
 
     requireDevelopmentEnvName
-    migrate "${hostPodName}" "${migratorName}" "${pvcName}" "${pvcType}" "${pvcSize}"
+    migrate "${hostPodName}" "${migratorName}" "${pvcName}" "${pvcType}" "${pvcSize}" "${pvcAccess}"
     ;;
 
   copy)
